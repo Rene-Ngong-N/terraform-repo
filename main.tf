@@ -15,8 +15,25 @@ provider "google" {
   zone   = "us-central1-a"
 }
 
+# resource "google_compute_firewall" "default" {
+#   name    = "rene-firewall"
+#   network = google_compute_network.default.name
+
+#   allow {
+#     protocol = "icmp"
+#   }
+
+#   allow {
+#     protocol = "tcp"
+#     ports    = ["80", "8080", "1000-2000", "22"]
+#   }
+
+#   source_tags = ["web"]
+#   source_ranges = ["0.0.0.0/0"]
+# }
+
 resource "google_compute_firewall" "default" {
-  name    = "rene-firewall"
+  name    = "test-firewall"
   network = google_compute_network.default.name
 
   allow {
@@ -25,11 +42,15 @@ resource "google_compute_firewall" "default" {
 
   allow {
     protocol = "tcp"
-    ports    = ["80", "8080", "1000-2000", "22"]
+    ports    = ["8080", "1000-2000"]
   }
 
   source_tags = ["web"]
 }
+
+# resource "google_compute_network" "default" {
+#   name = "test-network"
+# }
 
 resource "google_compute_network" "default" {
   name = "test-network"
@@ -40,6 +61,16 @@ resource "google_service_account" "default" {
   display_name = "Service Account"
 }
 
+resource "google_compute_firewall" "allow-http" {
+  name = "default-allow-http"
+  network = google_compute_network.default.name
+
+  allow{
+    protocol = "tcp"
+    ports = ["80"]
+  }
+}
+
 resource "google_compute_instance" "default" {
   name         = "apache-server"
   machine_type = "e2-medium"
@@ -47,7 +78,10 @@ resource "google_compute_instance" "default" {
 
 #   tags = ["foo", "bar"]
 
-  tags = ["web", "http-server", "https-server"]
+  #tags = ["web", "http-server", "https-server"]
+  tags = ["http-server", "https-server"]
+
+  
 
   boot_disk {
     initialize_params {
@@ -69,7 +103,12 @@ resource "google_compute_instance" "default" {
 #     foo = "bar"
 #   }
 
-  metadata_startup_script = "echo hi > /test.txt"
+  metadata_startup_script = file("./apache2.sh")
+#   metadata_startup_script = "echo hi > /test.txt"
+  scheduling {
+    preemptible = true
+    automatic_restart = false
+  }
 
   service_account {
     # Google recommends custom service accounts that have cloud-platform scope and permissions granted via IAM Roles.
