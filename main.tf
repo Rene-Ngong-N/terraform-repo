@@ -10,7 +10,7 @@ terraform {
 
 provider "google" {
   # Configuration options
-  project = "test-env-360218"
+  project = "vocal-pad-359317"
   region = "us-central1"
   zone   = "us-central1-a"
 }
@@ -42,10 +42,11 @@ resource "google_compute_firewall" "default" {
 
   allow {
     protocol = "tcp"
-    ports    = ["8080", "1000-2000"]
+    ports    = ["8080", "1000-2000", "22"]
   }
 
   source_tags = ["web"]
+  source_ranges = ["0.0.0.0/0"]
 }
 
 # resource "google_compute_network" "default" {
@@ -62,7 +63,7 @@ resource "google_service_account" "default" {
 }
 
 resource "google_compute_firewall" "allow-http" {
-  name = "default-allow-http"
+  name = "default-allow-http1"
   network = google_compute_network.default.name
 
   allow{
@@ -79,7 +80,7 @@ resource "google_compute_instance" "default" {
 #   tags = ["foo", "bar"]
 
   #tags = ["web", "http-server", "https-server"]
-  tags = ["http-server", "https-server"]
+  tags = ["web"]
 
   
 
@@ -89,7 +90,9 @@ resource "google_compute_instance" "default" {
     }
   }
   network_interface {
-    network = google_compute_network.default.name
+     network = google_compute_network.default.name
+    # network = "default"
+
 
     access_config {
       // Ephemeral public IP
